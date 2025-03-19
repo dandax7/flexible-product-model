@@ -1,0 +1,50 @@
+DROP DATABASE IF EXISTS inventory;
+
+CREATE DATABASE inventory;
+
+\c inventory;
+
+CREATE TABLE
+products (
+	ProductID VARCHAR(50) PRIMARY KEY,
+	Name TEXT,
+    ctime TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    utime TIMESTAMP NULL, -- for future updates
+	dtime TIMESTAMP NULL -- for future deletes
+);
+
+CREATE TABLE
+skus (
+	SKU VARCHAR(50) PRIMARY KEY,
+	ProductID VARCHAR(50),
+    ctime TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    utime TIMESTAMP NULL, -- for future updates
+	dtime TIMESTAMP NULL -- for future deletes
+);
+
+CREATE TABLE
+attribute_dictionary (
+    Id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    Attribute TEXT UNIQUE NOT NULL,
+    ctime TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    utime TIMESTAMP NULL, -- for future updates
+	dtime TIMESTAMP NULL -- for future deletes
+);
+
+CREATE TABLE
+sku_attributes (
+	SKU VARCHAR(50),
+	Id INTEGER, -- from attribute_dictionary
+	Value TEXT,
+    ctime TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    utime TIMESTAMP NULL, -- for future updates
+	dtime TIMESTAMP NULL -- for future deletes
+);
+
+-- To optimise SELECT SKU WHERE Id = {} AND Value LIKE "{}%"
+-- TODO: To further optimise more flexible Value searches, use GIN
+CREATE INDEX idx_sku_attributes_id_value
+	ON SKU_attributes (Id, Value)
+	INCLUDE (SKU);
+
+\dt;

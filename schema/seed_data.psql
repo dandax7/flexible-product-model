@@ -1,0 +1,74 @@
+\c inventory;
+
+INSERT INTO "attribute_dictionary" (Attribute)
+    VALUES ('Size');
+
+INSERT INTO "attribute_dictionary" (Attribute)
+    VALUES ('Color');
+
+INSERT INTO "products" (ProductID, Name) VALUES
+    ('M-SW-HOOD', 'Men''s Sweatshirt Hoodie'),
+    ('W-SW-HOOD', 'Woman''s Sweatshirt Hoodie')
+;
+
+INSERT INTO "skus" (SKU, ProductID) VALUES
+    ('M-SW-HOOD-L-B', 'M-SW-HOOD'),
+    ('M-SW-HOOD-S-B', 'M-SW-HOOD'),
+    ('M-SW-HOOD-M-B', 'M-SW-HOOD'),
+    ('M-SW-HOOD-L-W', 'M-SW-HOOD'),
+    ('M-SW-HOOD-S-W', 'M-SW-HOOD'),
+    ('M-SW-HOOD-M-W', 'M-SW-HOOD'),
+
+    ('W-SW-HOOD-L-W', 'W-SW-HOOD'),
+    ('W-SW-HOOD-S-W', 'W-SW-HOOD'),
+    ('W-SW-HOOD-M-W', 'W-SW-HOOD'),
+    ('W-SW-HOOD-L-G', 'W-SW-HOOD'),
+    ('W-SW-HOOD-S-G', 'W-SW-HOOD'),
+    ('W-SW-HOOD-M-G', 'W-SW-HOOD')
+;
+
+DO $$
+DECLARE
+    Size_Id INTEGER;
+    Color_Id INTEGER;
+
+BEGIN
+    SELECT Id INTO Size_Id
+    FROM attribute_dictionary
+    WHERE Attribute = 'Size';
+
+    SELECT Id INTO Color_Id
+    FROM attribute_dictionary
+    WHERE Attribute = 'Color';
+
+    INSERT INTO "sku_attributes" (SKU, Id, Value) VALUES
+        ('M-SW-HOOD-L-B', Size_Id, 'Large'),
+        ('M-SW-HOOD-S-B', Size_Id, 'Small'),
+        ('M-SW-HOOD-M-B', Size_Id, 'Medium'),
+        ('M-SW-HOOD-L-W', Size_Id, 'Large'),
+        ('M-SW-HOOD-S-W', Size_Id, 'Small'),
+        ('M-SW-HOOD-M-W', Size_Id, 'Medium'),
+
+        ('W-SW-HOOD-L-W', Size_Id, 'Large'),
+        ('W-SW-HOOD-S-W', Size_Id, 'Small'),
+        ('W-SW-HOOD-M-W', Size_Id, 'Medium'),
+        ('W-SW-HOOD-L-G', Size_Id, 'Large'),
+        ('W-SW-HOOD-S-G', Size_Id, 'Small'),
+        ('W-SW-HOOD-M-G', Size_Id, 'Medium');
+    
+    INSERT INTO "sku_attributes" (SKU, Id, Value) VALUES
+        ('M-SW-HOOD-L-B', Color_Id, 'Black'),
+        ('M-SW-HOOD-S-B', Color_Id, 'Black'),
+        ('M-SW-HOOD-M-B', Color_Id, 'Black'),
+        ('M-SW-HOOD-L-W', Color_Id, 'White'),
+        ('M-SW-HOOD-S-W', Color_Id, 'White'),
+        ('M-SW-HOOD-M-W', Color_Id, 'White'),
+
+        ('W-SW-HOOD-L-W', Color_Id, 'White'),
+        ('W-SW-HOOD-S-W', Color_Id, 'White'),
+        ('W-SW-HOOD-M-W', Color_Id, 'White'),
+        ('W-SW-HOOD-L-G', Color_Id, 'Gray'),
+        ('W-SW-HOOD-S-G', Color_Id, 'Gray'),
+        ('W-SW-HOOD-M-G', Color_Id, 'Gray');
+
+END $$;
