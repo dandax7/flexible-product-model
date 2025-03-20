@@ -6,7 +6,7 @@ INSERT INTO "attribute_dictionary" (attribute)
 INSERT INTO "attribute_dictionary" (attribute)
     VALUES ('Color');
 
-INSERT INTO "products" (product_id, Name) VALUES
+INSERT INTO "products" (product_id, name) VALUES
     ('M-SW-HOOD', 'Men''s Sweatshirt Hoodie'),
     ('W-SW-HOOD', 'Woman''s Sweatshirt Hoodie')
 ;
