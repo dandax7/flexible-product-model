@@ -4,47 +4,49 @@ CREATE DATABASE inventory;
 
 \c inventory;
 
+CREATE EXTENSION IF NOT EXISTS citext;
+
 CREATE TABLE
 products (
-	ProductID VARCHAR(50) PRIMARY KEY,
-	Name TEXT,
+    product_id CITEXT PRIMARY KEY,
+    name CITEXT,
     ctime TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     utime TIMESTAMP NULL, -- for future updates
-	dtime TIMESTAMP NULL -- for future deletes
+    dtime TIMESTAMP NULL -- for future deletes
 );
 
 CREATE TABLE
 skus (
-	SKU VARCHAR(50) PRIMARY KEY,
-	ProductID VARCHAR(50),
+    sku CITEXT PRIMARY KEY,
+    product_id CITEXT,
     ctime TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     utime TIMESTAMP NULL, -- for future updates
-	dtime TIMESTAMP NULL -- for future deletes
+    dtime TIMESTAMP NULL -- for future deletes
 );
 
 CREATE TABLE
 attribute_dictionary (
-    Id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    Attribute TEXT UNIQUE NOT NULL,
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    attribute CITEXT UNIQUE NOT NULL,
     ctime TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     utime TIMESTAMP NULL, -- for future updates
-	dtime TIMESTAMP NULL -- for future deletes
+    dtime TIMESTAMP NULL -- for future deletes
 );
 
 CREATE TABLE
 sku_attributes (
-	SKU VARCHAR(50),
-	Id INTEGER, -- from attribute_dictionary
-	Value TEXT,
+    sku CITEXT,
+    id INTEGER, -- from attribute_dictionary
+    value CITEXT,
     ctime TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     utime TIMESTAMP NULL, -- for future updates
-	dtime TIMESTAMP NULL -- for future deletes
+    dtime TIMESTAMP NULL -- for future deletes
 );
 
--- To optimise SELECT SKU WHERE Id = {} AND Value LIKE "{}%"
--- TODO: To further optimise more flexible Value searches, use GIN
+-- To optimise SELECT sku WHERE id = {} AND value LIKE "{}%"
+-- TODO: To further optimise more flexible value searches, use GIN
 CREATE INDEX idx_sku_attributes_id_value
-	ON SKU_attributes (Id, Value)
-	INCLUDE (SKU);
+    ON sku_attributes (id, value)
+    INCLUDE (sku);
 
 \dt;

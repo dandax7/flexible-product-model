@@ -1,17 +1,17 @@
 \c inventory;
 
-INSERT INTO "attribute_dictionary" (Attribute)
+INSERT INTO "attribute_dictionary" (attribute)
     VALUES ('Size');
 
-INSERT INTO "attribute_dictionary" (Attribute)
+INSERT INTO "attribute_dictionary" (attribute)
     VALUES ('Color');
 
-INSERT INTO "products" (ProductID, Name) VALUES
+INSERT INTO "products" (product_id, Name) VALUES
     ('M-SW-HOOD', 'Men''s Sweatshirt Hoodie'),
     ('W-SW-HOOD', 'Woman''s Sweatshirt Hoodie')
 ;
 
-INSERT INTO "skus" (SKU, ProductID) VALUES
+INSERT INTO "skus" (sku, product_id) VALUES
     ('M-SW-HOOD-L-B', 'M-SW-HOOD'),
     ('M-SW-HOOD-S-B', 'M-SW-HOOD'),
     ('M-SW-HOOD-M-B', 'M-SW-HOOD'),
@@ -33,15 +33,15 @@ DECLARE
     Color_Id INTEGER;
 
 BEGIN
-    SELECT Id INTO Size_Id
+    SELECT id INTO Size_Id
     FROM attribute_dictionary
-    WHERE Attribute = 'Size';
+    WHERE attribute = 'Size';
 
-    SELECT Id INTO Color_Id
+    SELECT id INTO Color_Id
     FROM attribute_dictionary
-    WHERE Attribute = 'Color';
+    WHERE attribute = 'Color';
 
-    INSERT INTO "sku_attributes" (SKU, Id, Value) VALUES
+    INSERT INTO "sku_attributes" (sku, id, value) VALUES
         ('M-SW-HOOD-L-B', Size_Id, 'Large'),
         ('M-SW-HOOD-S-B', Size_Id, 'Small'),
         ('M-SW-HOOD-M-B', Size_Id, 'Medium'),
@@ -56,7 +56,7 @@ BEGIN
         ('W-SW-HOOD-S-G', Size_Id, 'Small'),
         ('W-SW-HOOD-M-G', Size_Id, 'Medium');
     
-    INSERT INTO "sku_attributes" (SKU, Id, Value) VALUES
+    INSERT INTO "sku_attributes" (sku, id, value) VALUES
         ('M-SW-HOOD-L-B', Color_Id, 'Black'),
         ('M-SW-HOOD-S-B', Color_Id, 'Black'),
         ('M-SW-HOOD-M-B', Color_Id, 'Black'),
