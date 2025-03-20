@@ -1,4 +1,4 @@
-export interface SKU {
+export default interface SKU {
     sku: string;
     name: string | null;
     productName: string | null;

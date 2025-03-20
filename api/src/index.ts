@@ -1,12 +1,11 @@
 import express, { Request, Response } from 'express';
 import 'express-async-errors';
-import dotenv from 'dotenv';
 
 import { inventoryDbPool } from './db';
-import { Product } from './models/product';
-//import { SKU } from './models/sku';
+import Attributes from './attributes';
 
-dotenv.config();
+import Product from './models/product';
+import SKU from './models/sku';
 
 const app = express();
 app.use(express.json());
@@ -14,16 +13,22 @@ app.use(express.json());
 
 app.get('/api/product/:id', async (req: Request, res: Response) => {
     const SQL = 
-    'SELECT product_id AS "productId", name AS "name" \
+    'SELECT product_id, name \
       FROM products \
       WHERE product_id = $1 \
       AND dtime IS NULL';
     const productId : string = req.params.id;
+
+    console.log(req.params, req.body);
+
     const result = await inventoryDbPool.query(SQL, [productId]);
     if (!result.rows.length) return res.status(404).json({ error: `ProductId ${productId} not found` });
 
-    // TODO: validate results.rows[0] conforms to Product shape    
-    let product : Product = result.rows[0];
+    // TODO: validate better
+    let product : Product = {
+        productId: result.rows[0].product_id,
+        name: result.rows[0].name
+    };
 
     return res.json(product);
   });
@@ -59,24 +64,59 @@ app.put('/api/product/:id', async (req: Request, res: Response) => {
     return res.status(204).json({});
 });
 
+app.get('/api/attributes', async (req: Request, res: Response) => {
+    const attributes_map = await Attributes.getAllAttributes();
+    return res.status(200).json(Object.values(attributes_map));
+});
+
+
+//app.post('/api/attributes', async (req: Request, res: Response) => {
+
+app.get('/api/sku/:sku', async (req: Request, res: Response) => {
+    const SQL1 =
+    'SELECT skus.sku, products.name \
+     FROM skus \
+     JOIN products ON products.product_id = skus.product_id \
+     WHERE skus.sku = $1';
+
+    const sku : string = req.params.sku;
+    const result1 = await inventoryDbPool.query(SQL1, [sku]);
+    if (!result1.rows.length) return res.status(404).json({ error: `SKU ${sku} not found` });
+
+    console.log(result1.rows[0]);
+
+    const sku_with_attr : SKU = {
+        sku: result1.rows[0]['sku'],
+        name: result1.rows[0]['name'],
+        productName: result1.rows[0]['name'],
+        attributes: {}
+    };
+    
+    const SQL2 = 
+    'SELECT sku, id, value \
+     FROM sku_attributes \
+     WHERE sku = $1 \
+     ORDER BY id \
+     ';
+
+     // ORDER BY is needed to create consitent results
+     const result2 = await inventoryDbPool.query(SQL2, [sku]);
+     if (result2.rows.length) {
+        const attributes = await Attributes.getAllAttributes()
+
+        result2.rows.forEach(row => {
+            // TODO: this shouldn't happen, warn if it does
+            const attrName : string = attributes[row.id] ?? `Undefined-${row.id}`;
+            sku_with_attr.attributes[attrName] = row.value ?? 'Missing';
+        });
+        const append = Object.values(sku_with_attr.attributes).join(",");
+        if (append) sku_with_attr.name += ` (${append})`;
+     }
+
+     return res.json(sku_with_attr);
+})
+
 /*
-// GET /api/attributes
-app.get('/api/attributes', (_req: Request, res: Response) => {
-  res.json(attributes);
-});
-
-// PUT /api/attributes
-app.put('/api/attributes', (req: Request, res: Response) => {
-  attributes = req.body;
-  res.json({ success: true, data: attributes });
-});
-
-// GET /api/get-sku/:sku
-app.get('/api/get-sku/:sku', (req: Request, res: Response) => {
-  const { sku } = req.params;
-  const skuData = skus[sku];
-  res.json(skuData ?? { error: 'SKU not found' });
-});
 
 // PUT /api/get-sku/:sku
 app.put('/api/get-sku/:sku', (req: Request, res: Response) => {
