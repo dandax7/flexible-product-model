@@ -10,20 +10,20 @@ import SKU from './models/sku';
 const app = express();
 app.use(express.json());
 
-app.get('/api/product/:name', async (req: Request, res: Response) => {
+app.get('/api/product/:id', async (req: Request, res: Response) => {
     const SQL = 
-    'SELECT product_name, name \
+    'SELECT product_id, name \
       FROM products \
-      WHERE product_name = $1 \
+      WHERE product_id = $1 \
       AND dtime IS NULL';
-    const productName : string = req.params.name;
+    const productId : string = req.params.id;
 
-    const result = await inventoryDbPool.query(SQL, [productName]);
-    if (!result.rows.length) return res.status(404).json({ error: `Product ${productName} not found` });
+    const result = await inventoryDbPool.query(SQL, [productId]);
+    if (!result.rows.length) return res.status(404).json({ error: `Product ${productId} not found` });
 
     // TODO: validate better
     let product : Product = {
-        productName: result.rows[0].product_name,
+        productId: result.rows[0].product_id,
         name: result.rows[0].name
     };
 
@@ -34,26 +34,26 @@ app.get('/api/product/:name', async (req: Request, res: Response) => {
 // UPSERT for idempotancy
 app.put('/api/product/:name', async (req: Request, res: Response) => {
     const SQL =
-    'INSERT INTO products (product_name, name) \
+    'INSERT INTO products (product_id, name) \
      VALUES ($1, $2) \
-     ON CONFLICT (product_name) \
+     ON CONFLICT (product_id) \
      DO UPDATE SET  \
-        product_name = EXCLUDED.product_name, \
+        product_id = EXCLUDED.product_id, \
         name =  EXCLUDED.name, \
         utime = CURRENT_TIMESTAMP';
-    const productName : string = req.params.name;
+    const productId : string = req.params.name;
     const body : Product = req.body;
 
-    // TODO: ensure body is proper shape, for now we allow to have productName be ommited
+    // TODO: ensure body is proper shape, for now we allow to have productId be ommited
     // since it's part of the URL 
-    if (body.productName === undefined) {
-        body.productName = productName;
-    } else if (body.productName.toLowerCase() != productName.toLowerCase()) {
+    if (body.productId === undefined) {
+        body.productId = productId;
+    } else if (body.productId.toLowerCase() != productId.toLowerCase()) {
         return res.status(400).json({ error: "URL/payload mismatch"});
     }
 
     // TODO: handle a DB error differently then 500
-    await inventoryDbPool.query(SQL, [body.productName, body.name]);
+    await inventoryDbPool.query(SQL, [body.productId, body.name]);
 
     // TODO: should we return data on PUT ?
     return res.status(200).json({});
@@ -75,7 +75,7 @@ app.get('/api/sku/:sku', async (req: Request, res: Response) => {
     const SQL1 =
     'SELECT skus.sku, products.name \
      FROM skus \
-     JOIN products ON products.product_name = skus.product_name \
+     JOIN products ON products.product_id = skus.product_id \
      WHERE skus.sku = $1';
 
     const sku : string = req.params.sku;
@@ -85,7 +85,7 @@ app.get('/api/sku/:sku', async (req: Request, res: Response) => {
     const sku_with_attr : SKU = {
         sku: result1.rows[0]['sku'],
         name: result1.rows[0]['name'],
-        productName: result1.rows[0]['name'],
+        productId: result1.rows[0]['name'],
         attributes: {}
     };
     
@@ -122,7 +122,7 @@ app.put('/api/sku/:sku', async (req: Request, res: Response) => {
     const attributes = await Attributes.getAllAttributes()
     const byLowercaseAttribute = attributes.byLowercaseAttribute;
 
-    // TODO: ensure body is proper shape, for now we allow to have productName be ommited
+    // TODO: ensure body is proper shape, for now we allow to have productId be ommited
     // since it's part of the URL 
     if (body.sku === undefined) {
         body.sku = sku;
@@ -130,25 +130,25 @@ app.put('/api/sku/:sku', async (req: Request, res: Response) => {
         return res.status(400).json({ error: "URL/payload mismatch"});
     }
 
-    const SQL1 = 'SELECT EXISTS (SELECT 1 FROM products WHERE product_name = $1)';
+    const SQL1 = 'SELECT EXISTS (SELECT 1 FROM products WHERE product_id = $1)';
 
     // lets make sure we have all the the attributes in the dictionary
     const SQL2 =
-    'INSERT INTO skus (sku, product_name) VALUES ($1, $2)'
+    'INSERT INTO skus (sku, product_id) VALUES ($1, $2)'
 
     let SQL3 =
     'INSERT INTO sku_attributes (sku, id, value) VALUES '
 
     // ensure product exists
-    const result = await inventoryDbPool.query(SQL1, [body.productName]);
+    const result = await inventoryDbPool.query(SQL1, [body.productId]);
     if (!result.rows[0].exists) {
-        return res.status(400).json({ error: `Product ${body.productName} does not exist`});
+        return res.status(400).json({ error: `Product ${body.productId} does not exist`});
     }
 
     const client = await inventoryDbPool.connect(); // Get a client from the pool
     try {
         await client.query('BEGIN');
-        await client.query(SQL2, [body.sku, body.productName]);
+        await client.query(SQL2, [body.sku, body.productId]);
 
         // TODO: create a helper for these attribute to id params
         let param = 2

@@ -5,12 +5,12 @@ INSERT INTO "attribute_dictionary" (attribute) VALUES
     ('Color')
 ;
 
-INSERT INTO "products" (product_name, name) VALUES
+INSERT INTO "products" (product_id, name) VALUES
     ('M-SW-HOOD', 'Men''s Sweatshirt Hoodie'),
     ('W-SW-HOOD', 'Woman''s Sweatshirt Hoodie')
 ;
 
-INSERT INTO "skus" (sku, product_name) VALUES
+INSERT INTO "skus" (sku, product_id) VALUES
     ('M-SW-HOOD-L-B', 'M-SW-HOOD'),
     ('M-SW-HOOD-S-B', 'M-SW-HOOD'),
     ('M-SW-HOOD-M-B', 'M-SW-HOOD'),

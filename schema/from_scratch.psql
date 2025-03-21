@@ -8,7 +8,7 @@ CREATE EXTENSION IF NOT EXISTS citext;
 
 CREATE TABLE
 products (
-    product_name CITEXT PRIMARY KEY,
+    product_id CITEXT PRIMARY KEY,
     name CITEXT,
     ctime TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     utime TIMESTAMP NULL, -- for future updates
@@ -18,7 +18,7 @@ products (
 CREATE TABLE
 skus (
     sku CITEXT PRIMARY KEY,
-    product_name CITEXT,
+    product_id CITEXT,
     ctime TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     utime TIMESTAMP NULL, -- for future updates
     dtime TIMESTAMP NULL -- for future deletes
