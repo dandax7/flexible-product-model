@@ -1,4 +1,4 @@
 export default interface Product {
-    productId: string,
+    productName: string,
     name: string | null
 };

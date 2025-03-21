@@ -10,20 +10,20 @@ import SKU from './models/sku';
 const app = express();
 app.use(express.json());
 
-app.get('/api/product/:id', async (req: Request, res: Response) => {
+app.get('/api/product/:name', async (req: Request, res: Response) => {
     const SQL = 
-    'SELECT product_id, name \
+    'SELECT product_name, name \
       FROM products \
-      WHERE product_id = $1 \
+      WHERE product_name = $1 \
       AND dtime IS NULL';
-    const productId : string = req.params.id;
+    const productName : string = req.params.name;
 
-    const result = await inventoryDbPool.query(SQL, [productId]);
-    if (!result.rows.length) return res.status(404).json({ error: `ProductId ${productId} not found` });
+    const result = await inventoryDbPool.query(SQL, [productName]);
+    if (!result.rows.length) return res.status(404).json({ error: `Product ${productName} not found` });
 
     // TODO: validate better
     let product : Product = {
-        productId: result.rows[0].product_id,
+        productName: result.rows[0].product_name,
         name: result.rows[0].name
     };
 
@@ -32,28 +32,28 @@ app.get('/api/product/:id', async (req: Request, res: Response) => {
 
 // PUT /api/product/:id
 // UPSERT for idempotancy
-app.put('/api/product/:id', async (req: Request, res: Response) => {
+app.put('/api/product/:name', async (req: Request, res: Response) => {
     const SQL =
-    'INSERT INTO products (product_id, name) \
+    'INSERT INTO products (product_name, name) \
      VALUES ($1, $2) \
-     ON CONFLICT (product_id) \
+     ON CONFLICT (product_name) \
      DO UPDATE SET  \
-        product_id = EXCLUDED.product_id, \
+        product_name = EXCLUDED.product_name, \
         name =  EXCLUDED.name, \
         utime = CURRENT_TIMESTAMP';
-    const productId : string = req.params.id;
+    const productName : string = req.params.name;
     const body : Product = req.body;
 
-    // TODO: ensure body is proper shape, for now we allow to have productId be ommited
+    // TODO: ensure body is proper shape, for now we allow to have productName be ommited
     // since it's part of the URL 
-    if (body.productId === undefined) {
-        body.productId = productId;
-    } else {
+    if (body.productName === undefined) {
+        body.productName = productName;
+    } else if (body.productName.toLowerCase() != productName.toLowerCase()) {
         return res.status(400).json({ error: "URL/payload mismatch"});
     }
 
     // TODO: handle a DB error differently then 500
-    await inventoryDbPool.query(SQL, [body.productId, body.name]);
+    await inventoryDbPool.query(SQL, [body.productName, body.name]);
 
     // TODO: should we return data on PUT ?
     return res.status(200).json({});
@@ -75,7 +75,7 @@ app.get('/api/sku/:sku', async (req: Request, res: Response) => {
     const SQL1 =
     'SELECT skus.sku, products.name \
      FROM skus \
-     JOIN products ON products.product_id = skus.product_id \
+     JOIN products ON products.product_name = skus.product_name \
      WHERE skus.sku = $1';
 
     const sku : string = req.params.sku;
@@ -113,14 +113,75 @@ app.get('/api/sku/:sku', async (req: Request, res: Response) => {
      return res.status(200).json(sku_with_attr);
 })
 
-/*
-// PUT /api/get-sku/:sku
-app.put('/api/get-sku/:sku', (req: Request, res: Response) => {
-  const { sku } = req.params;
-  skus[sku] = req.body;
-  res.json({ success: true, data: skus[sku] });
+
+// PUT /api/sku/:sku
+// TODO: handle idempotancy
+app.put('/api/sku/:sku', async (req: Request, res: Response) => {
+    const sku : string = req.params.sku;
+    const body : SKU = req.body;
+    const attributes = await Attributes.getAllAttributes()
+    const byLowercaseAttribute = attributes.byLowercaseAttribute;
+
+    // TODO: ensure body is proper shape, for now we allow to have productName be ommited
+    // since it's part of the URL 
+    if (body.sku === undefined) {
+        body.sku = sku;
+    } else if (body.sku.toLowerCase() != sku.toLowerCase()) {
+        return res.status(400).json({ error: "URL/payload mismatch"});
+    }
+
+    const SQL1 = 'SELECT EXISTS (SELECT 1 FROM products WHERE product_name = $1)';
+
+    // lets make sure we have all the the attributes in the dictionary
+    const SQL2 =
+    'INSERT INTO skus (sku, product_name) VALUES ($1, $2)'
+
+    let SQL3 =
+    'INSERT INTO sku_attributes (sku, id, value) VALUES '
+
+    // ensure product exists
+    const result = await inventoryDbPool.query(SQL1, [body.productName]);
+    if (!result.rows[0].exists) {
+        return res.status(400).json({ error: `Product ${body.productName} does not exist`});
+    }
+
+    const client = await inventoryDbPool.connect(); // Get a client from the pool
+    try {
+        await client.query('BEGIN');
+        await client.query(SQL2, [body.sku, body.productName]);
+
+        // TODO: create a helper for these attribute to id params
+        let param = 2
+        let params : (number | string)[] = [body.sku]
+        for (const [attribute, value] of Object.entries(body.attributes)) {
+            let id = byLowercaseAttribute[attribute.toLowerCase()];
+            if (id === undefined) {
+                return res.status(400).json({error: `Unknown ${attribute}`});
+            }
+
+            if (param != 2) SQL3 += ',';
+
+            SQL3 += `($1, $${param}, $${param+1})`
+            param += 2
+            params.push(id)
+            params.push(value)
+        }
+        console.log(SQL3);
+        console.log(params);
+
+        if (params.length) await client.query(SQL3, params);
+
+        await client.query('COMMIT');
+    } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+    } finally {
+        client.release(); // Return client to the pool
+    }
+
+    // TODO: should we return data on PUT ?
+    return res.status(200).json({});
 });
-*/
 
 // /api/search/sku?size=large&color=white
 // TODO: more then just AND
@@ -131,6 +192,8 @@ app.get('/api/search/sku', async (req: Request, res: Response) => {
     // map criteria ID's
     const attributes = (await Attributes.getAllAttributes()).byLowercaseAttribute;
 
+
+    // TODO: create a helper for these attribute to id params
     let SQL = ""
     let param = 1
     let params = []

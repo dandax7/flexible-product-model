@@ -1,9 +1,12 @@
-#!/bin/bash
-
 TEST_ROOT=http://localhost:3000/api
 
 set failed = 0
 set passed = 0
+
+curl -s -I ${TEST_ROOT} > /dev/null || { echo "Server is not running"; exit 1; }
+
+echo "🚀 Server is running on $TEST_ROOT"
+
 
 test_api() {
   local url="$1"
@@ -34,20 +37,12 @@ test_api() {
   rm $tmp_output
 }
 
-cd "$(dirname "$0")"
-
-curl -I ${TEST_ROOT} || { echo "Server is not running"; exit 1; }
-
-test_api "${TEST_ROOT}/attributes" "GET" "{}" "check_output/test1"
-test_api "${TEST_ROOT}/product/M-SW-HOOD" "GET" "{}" "check_output/test2"
-test_api "${TEST_ROOT}/sku/M-SW-HOOD-L-B" "GET" "{}" "check_output/test3"
-test_api "${TEST_ROOT}/search/sku?size=small&color=gray" "GET" "{}" "check_output/test4"
-test_api "${TEST_ROOT}/search/sku?size=small" "GET" "{}" "check_output/test5"
-
-echo "TALLY"
-echo "Passed: $passed"
-if (( failed > 0 )); then
-    echo "Failed: $failed"
-    exit 1
-fi
-exit 0
+end_test() {
+  echo "TALLY"
+  echo "Passed: $passed"
+  if (( failed > 0 )); then
+      echo "Failed: $failed"
+      exit 1
+  fi
+  exit 0
+}

@@ -84,5 +84,5 @@ class _attributes {
 }
   
 // Export a single shared instance
-const attributes = new _attributes();
-export default attributes;
+const Attributes = new _attributes();
+export default Attributes;
