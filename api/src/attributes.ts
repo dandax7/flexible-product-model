@@ -5,15 +5,13 @@ dotenv.config();
 
 type AttributesDictionary = {
     byId: { [key: number]: string },
-    byAttribute: { [key: string] : number },
-    lowercaseList: string[]
+    byLowercaseAttribute: { [key: string] : number }
 };
 
 class _attributes {
     private attributes_dictionary: AttributesDictionary = {
         byId: {},
-        byAttribute: {},
-        lowercaseList: []
+        byLowercaseAttribute: {}
     }
     private lastTimestamp: number | undefined;
     private cacheTimeoutMSec: number;
@@ -31,8 +29,7 @@ class _attributes {
         const result = await inventoryDbPool.query(SQL);
         let ret : AttributesDictionary = {
             byId: Object.fromEntries(result.rows.map(({ id, attribute }) => [id, attribute])),
-            byAttribute: Object.fromEntries(result.rows.map(({ id, attribute }) => [attribute, id])),
-            lowercaseList: result.rows.map(item => item.attribute.toLowerCase())
+            byLowercaseAttribute: Object.fromEntries(result.rows.map(({ id, attribute }) => [attribute.toLowerCase(), id]))
         };
 
         console.log("Fetching attributes from database...");
@@ -59,10 +56,13 @@ class _attributes {
     }
 
     public async addNewAttributes(attributes : string[]): Promise<AttributesDictionary>  {
-        // this may initialize the cache
+        // TODO:
+        // write a store procedure for this
+
+        // use accessor, since they might not be loaded yet
         const all_attributes = await this.getAllAttributes()
 
-        const lowercaseList = all_attributes.lowercaseList;
+        const lowercaseList = Object.keys(all_attributes.byLowercaseAttribute);
         // insert only new ones:
         const newAttrs = attributes.filter(attr => !lowercaseList.includes(attr.toLowerCase()));
 

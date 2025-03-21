@@ -41,6 +41,8 @@ curl -I ${TEST_ROOT} || { echo "Server is not running"; exit 1; }
 test_api "${TEST_ROOT}/attributes" "GET" "{}" "check_output/test1"
 test_api "${TEST_ROOT}/product/M-SW-HOOD" "GET" "{}" "check_output/test2"
 test_api "${TEST_ROOT}/sku/M-SW-HOOD-L-B" "GET" "{}" "check_output/test3"
+test_api "${TEST_ROOT}/search/sku?size=small&color=gray" "GET" "{}" "check_output/test4"
+test_api "${TEST_ROOT}/search/sku?size=small" "GET" "{}" "check_output/test5"
 
 echo "TALLY"
 echo "Passed: $passed"

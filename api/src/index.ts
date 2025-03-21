@@ -56,18 +56,19 @@ app.put('/api/product/:id', async (req: Request, res: Response) => {
     await inventoryDbPool.query(SQL, [body.productId, body.name]);
 
     // TODO: should we return data on PUT ?
-    return res.status(204).json({});
+    return res.status(200).json({});
 });
 
 app.get('/api/attributes', async (req: Request, res: Response) => {
     const attributes_map = await Attributes.getAllAttributes();
-    return res.status(200).json(Object.keys(attributes_map.byAttribute));
+    return res.status(200).json(Object.values(attributes_map.byId));
 });
 
+// Merge additional ones
 app.patch('/api/attributes', async (req: Request, res: Response) => {
     const newAttributes : string[] = req.body;
     const attributes_map = await Attributes.addNewAttributes(newAttributes)
-    return res.status(200).json(Object.keys(attributes_map.byAttribute));
+    return res.status(200).json(Object.values(attributes_map.byId));
 });
 
 app.get('/api/sku/:sku', async (req: Request, res: Response) => {
@@ -109,11 +110,10 @@ app.get('/api/sku/:sku', async (req: Request, res: Response) => {
         if (append) sku_with_attr.name += ` (${append})`;
      }
 
-     return res.json(sku_with_attr);
+     return res.status(200).json(sku_with_attr);
 })
 
 /*
-
 // PUT /api/get-sku/:sku
 app.put('/api/get-sku/:sku', (req: Request, res: Response) => {
   const { sku } = req.params;
@@ -121,6 +121,37 @@ app.put('/api/get-sku/:sku', (req: Request, res: Response) => {
   res.json({ success: true, data: skus[sku] });
 });
 */
+
+// /api/search/sku?size=large&color=white
+// TODO: more then just AND
+// TODO: add pagination
+app.get('/api/search/sku', async (req: Request, res: Response) => {
+    const criteria : { } = req.query;
+
+    // map criteria ID's
+    const attributes = (await Attributes.getAllAttributes()).byLowercaseAttribute;
+
+    let SQL = ""
+    let param = 1
+    let params = []
+    for (const [attribute, value] of Object.entries(criteria)) {
+        let id = attributes[attribute.toLowerCase()];
+        if (id === undefined) {
+            return res.status(400).json({error: `Unknown criteria ${attribute}`});
+        }
+
+        if (param > 1) SQL += ' INTERSECT '
+
+        SQL += `SELECT sku FROM sku_attributes WHERE id = $${param} AND value = $${param+1}`
+        param += 2
+        params.push(id)
+        params.push(value)
+    }
+
+    const result = await inventoryDbPool.query(SQL, params);
+
+    return res.status(200).json(result.rows.map(row => row.sku));
+});
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     console.error('Unhandled error:', err);
