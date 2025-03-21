@@ -69,7 +69,6 @@ class _attributes {
         if (newAttrs.length) {
             const newArgs = newAttrs.map((_, i) => `($${i + 1})`).join(',');
             const SQL = `INSERT INTO attribute_dictionary (attribute) VALUES ${newArgs}`
-            console.log(SQL)
 
             await inventoryDbPool.query(SQL, newAttrs);
 

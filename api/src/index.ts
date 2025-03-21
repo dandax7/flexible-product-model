@@ -10,7 +10,6 @@ import SKU from './models/sku';
 const app = express();
 app.use(express.json());
 
-
 app.get('/api/product/:id', async (req: Request, res: Response) => {
     const SQL = 
     'SELECT product_id, name \
@@ -18,8 +17,6 @@ app.get('/api/product/:id', async (req: Request, res: Response) => {
       WHERE product_id = $1 \
       AND dtime IS NULL';
     const productId : string = req.params.id;
-
-    console.log(req.params, req.body);
 
     const result = await inventoryDbPool.query(SQL, [productId]);
     if (!result.rows.length) return res.status(404).json({ error: `ProductId ${productId} not found` });
@@ -46,8 +43,6 @@ app.put('/api/product/:id', async (req: Request, res: Response) => {
         utime = CURRENT_TIMESTAMP';
     const productId : string = req.params.id;
     const body : Product = req.body;
-    
-    console.log(req.params, req.body);
 
     // TODO: ensure body is proper shape, for now we allow to have productId be ommited
     // since it's part of the URL 
@@ -85,8 +80,6 @@ app.get('/api/sku/:sku', async (req: Request, res: Response) => {
     const sku : string = req.params.sku;
     const result1 = await inventoryDbPool.query(SQL1, [sku]);
     if (!result1.rows.length) return res.status(404).json({ error: `SKU ${sku} not found` });
-
-    console.log(result1.rows[0]);
 
     const sku_with_attr : SKU = {
         sku: result1.rows[0]['sku'],
