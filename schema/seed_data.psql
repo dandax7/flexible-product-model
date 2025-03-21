@@ -1,10 +1,9 @@
 \c inventory;
 
-INSERT INTO "attribute_dictionary" (attribute)
-    VALUES ('Size');
-
-INSERT INTO "attribute_dictionary" (attribute)
-    VALUES ('Color');
+INSERT INTO "attribute_dictionary" (attribute) VALUES
+    ('Size'),
+    ('Color')
+;
 
 INSERT INTO "products" (product_id, name) VALUES
     ('M-SW-HOOD', 'Men''s Sweatshirt Hoodie'),

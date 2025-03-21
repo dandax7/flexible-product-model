@@ -66,11 +66,14 @@ app.put('/api/product/:id', async (req: Request, res: Response) => {
 
 app.get('/api/attributes', async (req: Request, res: Response) => {
     const attributes_map = await Attributes.getAllAttributes();
-    return res.status(200).json(Object.values(attributes_map));
+    return res.status(200).json(Object.keys(attributes_map.byAttribute));
 });
 
-
-//app.post('/api/attributes', async (req: Request, res: Response) => {
+app.patch('/api/attributes', async (req: Request, res: Response) => {
+    const newAttributes : string[] = req.body;
+    const attributes_map = await Attributes.addNewAttributes(newAttributes)
+    return res.status(200).json(Object.keys(attributes_map.byAttribute));
+});
 
 app.get('/api/sku/:sku', async (req: Request, res: Response) => {
     const SQL1 =
@@ -103,10 +106,10 @@ app.get('/api/sku/:sku', async (req: Request, res: Response) => {
      const result2 = await inventoryDbPool.query(SQL2, [sku]);
      if (result2.rows.length) {
         const attributes = await Attributes.getAllAttributes()
-
+        const byId = attributes.byId
         result2.rows.forEach(row => {
             // TODO: this shouldn't happen, warn if it does
-            const attrName : string = attributes[row.id] ?? `Undefined-${row.id}`;
+            const attrName : string = byId[row.id] ?? `Undefined-${row.id}`;
             sku_with_attr.attributes[attrName] = row.value ?? 'Missing';
         });
         const append = Object.values(sku_with_attr.attributes).join(",");
