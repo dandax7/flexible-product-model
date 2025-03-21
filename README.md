@@ -56,8 +56,12 @@ It should print:
 
     🚀 Server running on http://localhost:3000
 
-Step 4: Run tests
-*In the original window*
+# Step 4: Run tests
 
-    # cd tests
-    # ./run_seed_test.sh
+    # cd <repo dir>
+    # tests/seed_test.sh                  # this tests that the initial seeded data is correct, does not modify
+    # tests/change_test.sh                # this actually modifies the data (TODO: the sku PUT test isn't idempotant and fails 2nd time)
+
+To rerun tests:
+1. shut down the server
+2. go back to step 2 (recreate the database)
