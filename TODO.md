@@ -1,6 +1,6 @@
 Design choices - and things to improve
 
-1. Service vs Data oriented design
+# 1. Service vs Data oriented design
 
 Systems can be deisgned with API first, or Data first approach.
 
@@ -19,7 +19,7 @@ Implementation:
 This project takes Data first approach. Data schema is normalized, and API uses predefined 
 SQL queries to access the data.
 
-2. Caching
+# 2. Caching
 
 There is no caching in the system except for the attributes dictionary. To promote efficient
 and consistent attributes, the attribute map (each attribute is mapped to an ID), is cached
@@ -27,12 +27,12 @@ in the server memory. It uses eventual consitency with a 10 second timeout, and 
 
 Design assumes that the dictionary of all attributes doesn't change often.
 
-3. Case insensitivity
+# 3. Case insensitivity
 
 The system is designed to NOT be case sensitive, so a sku of "ABC-123" is same as "abc-123" for
 all searching purposes. It does retain case on insert. This is enforced in the database.
 
-4. Product grouping
+# 4. Product grouping
 
 Since many SKU's are related, and are just different varieties of the same product, there's
 an additional grouping that's eforsed via 'Product ID'. Just like amazon will have a page
@@ -40,23 +40,23 @@ for a single product with various SKU's for their sizes and colors, the 'Product
 what groups these SKU's together. The product also shares common attributes like the product
 name, which is shared by all of it's SKU's (but each SKU adds attributes to the name)
 
-5. Code organization
+# 5. Code organization
 
-Splits
+## Splits
 
 Ideally the code should be split up more. We need repository classes to deal with the
 database specifics, and controller classes to deal with HTTP requests and responses.
 
-Unit tests
+## Unit tests
 
 Currently only system tests exist, unit tests with mocks should be added to code
 to run at compile time.
 
-6. Permissioning
+# 6. Permissioning
 
 there is no auth in this version
 
-7. Swagger
+# 7. Swagger
 
 there is no swagger, only postman or curl access to the APIs
 
