@@ -60,3 +60,12 @@ there is no auth in this version
 
 there is no swagger, only postman or curl access to the APIs
 
+# 8. Regrets
+
+Attributes management is messy and overly complex. It's might be premature performance optimization.
+
+Storing it as a JSON for every SKU in a JSOB column is a lot simpler, and performance could be
+mitigated via GIN search. If attributes change often, and GIN search is performant, this would be much
+better.
+
+
